@@ -9,12 +9,11 @@ const receiveTodos = (filter, response) => ({
 });
 
 // this is an asynchronous action creator (returns a promise that resolves to the action obj)
-export const fetchTodos = filter => {
+export const fetchTodos = filter =>
   api.fetchTodos(filter).then(response =>
     // receiveTodos returns an action obj synchronously
     receiveTodos(filter, response)
   );
-};
 
 export const addTodo = text => ({
   type: "ADD_TODO",
