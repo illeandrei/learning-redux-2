@@ -27,16 +27,15 @@ class VisibleTodoList extends Component {
 
   render() {
     const { toggleTodo, ...rest } = this.props;
-    return <TodoList onTodoClick={toggleTodo} {...rest} />;
+    return <TodoList {...rest} onTodoClick={toggleTodo} />;
   }
 }
 
 const mapStateToProps = (state, { match }) => {
   const filter = match.params.filter || "all";
-
   return {
-    filter,
-    todos: getVisibleTodos(state, filter)
+    todos: getVisibleTodos(state, filter),
+    filter
   };
 };
 
