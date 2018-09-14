@@ -18,6 +18,20 @@ const addLoggingToDispatch = store => {
   };
 };
 
+const addPromiseSupportToDispatch = store => {
+  const rawDispatch = store.dispatch;
+
+  return action => {
+    console.log("action:", action);
+
+    if (typeof action.then === "function") {
+      //wait for the promise to resolve to an action object that we pass to rawDispatch
+      return action.then(rawDispatch);
+    }
+    return rawDispatch(action);
+  };
+};
+
 const configureStore = () => {
   const store = createStore(rootReducer);
 
@@ -25,6 +39,8 @@ const configureStore = () => {
   if (process.env.NODE_ENV !== "production") {
     store.dispatch = addLoggingToDispatch(store);
   }
+
+  store.dispatch = addPromiseSupportToDispatch(store);
 
   return store;
 };
