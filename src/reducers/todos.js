@@ -1,38 +1,71 @@
 import { VisibilityFilters } from "../actions";
 import { combineReducers } from "redux";
-import todo from "./todo";
 
 const byId = (state = {}, action) => {
   switch (action.type) {
-    case "ADD_TODO":
-    case "TOGGLE_TODO":
-      return {
-        ...state,
-        [action.id]: todo(state[action.id], action)
-      };
+    case "RECEIVE_TODOS":
+      const nextState = { ...state };
+      action.response.forEach(todo => {
+        //this operation is a mutation
+        //but that is ok in this case because newState is a shallow copy of the original state
+        //and the assignment only happens one level deep
+        //so the function stays pure
+        nextState[todo.id] = todo;
+      });
+      return nextState;
     default:
       return state;
   }
 };
 
 const allIds = (state = [], action) => {
+  if (action.filter !== VisibilityFilters.SHOW_ALL) {
+    return state;
+  }
   switch (action.type) {
-    case "ADD_TODO":
-      return [...state, action.id];
+    case "RECEIVE_TODOS":
+      return action.response.map(todo => todo.id);
     default:
       return state;
   }
 };
 
+const activeIds = (state = [], action) => {
+  if (action.filter !== VisibilityFilters.SHOW_ACTIVE) {
+    return state;
+  }
+  switch (action.type) {
+    case "RECEIVE_TODOS":
+      return action.response.map(todo => todo.id);
+    default:
+      return state;
+  }
+};
+
+const completedIds = (state = [], action) => {
+  if (action.filter !== VisibilityFilters.SHOW_COMPLETED) {
+    return state;
+  }
+  switch (action.type) {
+    case "RECEIVE_TODOS":
+      return action.response.map(todo => todo.id);
+    default:
+      return state;
+  }
+};
+
+const idsByFilter = combineReducers({
+  all: allIds,
+  active: activeIds,
+  completed: completedIds
+});
+
 const todos = combineReducers({
   byId,
-  allIds
+  idsByFilter
 });
 
 export default todos;
-
-//selector
-const getAllTodos = state => state.allIds.map(id => state.byId[id]);
 
 // moved from VisibleTodos.js component because this is the place/file that
 // knows and is best aware of the state structure and more precisely the state.todos slice of it
@@ -41,15 +74,6 @@ const getAllTodos = state => state.allIds.map(id => state.byId[id]);
 // but any named export starting with 'get' is a function that prepares the data to be displayed by the UI.
 // This functions are usually called function selectors because they select something from the state
 export const getVisibleTodos = (state, filter) => {
-  const allTodos = getAllTodos(state);
-  switch (filter) {
-    case VisibilityFilters.SHOW_ALL:
-      return allTodos;
-    case VisibilityFilters.SHOW_COMPLETED:
-      return allTodos.filter(t => t.completed);
-    case VisibilityFilters.SHOW_ACTIVE:
-      return allTodos.filter(t => !t.completed);
-    default:
-      throw new Error("Unknown filter: " + filter);
-  }
+  const ids = state.idsByFilter[filter];
+  return ids.map(id => state.byId[id]);
 };
