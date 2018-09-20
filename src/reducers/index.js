@@ -1,12 +1,23 @@
+import { VisibilityFilters } from "../actions";
 import { combineReducers } from "redux";
-//using the name space import syntax to avoid duplicate variable declaration
-import todos, * as fromTodos from "./todos";
+import byId, * as fromById from "./byId";
+import createList, * as fromList from "./createList";
 
-export default combineReducers({
-  todos
+const listByFilter = combineReducers({
+  all: createList(VisibilityFilters.SHOW_ALL),
+  active: createList(VisibilityFilters.SHOW_ACTIVE),
+  completed: createList(VisibilityFilters.SHOW_COMPLETED)
 });
 
-//this is a named selector (similar to the one in /reducers/todos.js)
-export const getVisibleTodos = (state, filter) =>
-  //the state shape of the todos reducer should be encapsulated in the file where it's defined
-  fromTodos.getVisibleTodos(state.todos, filter);
+const todos = combineReducers({
+  byId,
+  listByFilter
+});
+
+export default todos;
+
+//selector
+export const getVisibleTodos = (state, filter) => {
+  const ids = fromList.getIds(state.listByFilter[filter]);
+  return ids.map(id => fromById.getTodo(state.byId, id));
+};
